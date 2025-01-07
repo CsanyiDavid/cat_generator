@@ -9,6 +9,7 @@ import torch.nn as nn
 
 from src.models import VariationalAutoencoder
 from src.train_and_eval import get_default_dataloader, train, plot_loss_values
+from src.utils import draw_model_graph
 
 def beta_fn(kl_loss, epoch):
     return 0.0001
@@ -28,6 +29,8 @@ def main():
         decoder_conv_t_stride=(2, 2, 2, 2, 2),
         decoder_conv_t_padding=(1, 1, 1, 1, 1)
     )
+    draw_model_graph(vae, training_id + "_model_graph")
+
     optimizer = torch.optim.Adam(vae.parameters(), lr=1e-3)
     mse = nn.MSELoss()
     epochs = 25
