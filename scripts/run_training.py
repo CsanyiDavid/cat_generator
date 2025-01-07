@@ -4,6 +4,7 @@ src_path = os.path.join(os.getcwd(), '..')
 sys.path.append(src_path)
 
 import pickle
+import shutil
 import torch
 import torch.nn as nn
 
@@ -16,6 +17,12 @@ def beta_fn(kl_loss, epoch):
 
 def main():
     training_id = "tr0"
+    
+    #copy_running_script
+    script_path = os.path.abspath(__file__)
+    copy_path = "./../train_logs/" + training_id + "_training_script.py"
+    shutil.copy(script_path, copy_path)
+
     dl = get_default_dataloader()
     vae = VariationalAutoencoder(
         input_shape=(1, 64, 64),
