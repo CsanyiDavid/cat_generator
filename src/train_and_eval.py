@@ -1,7 +1,11 @@
 import torch
 import torch.nn as nn
+import torchvision as tv
+from torchvision.transforms import v2
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+
+from src.image_processing import RandomCropResizeTransform
 
 def kl_loss(mean, logvar):
     kl_loss = -0.5 * torch.sum(1 + logvar - torch.square(mean) - torch.exp(logvar))
@@ -51,8 +55,6 @@ def train(dl, model, reconstruction_loss, beta_fn, optimizer, epochs):
                 loop.set_postfix(
                     reconstruction_loss=reconstruction_loss_value.item(),
                     kl_loss= kl_loss_value.item(),
-                    beta=beta,
-                    vae_loss = vae_loss_value.item()
                 )
 
         mean_reconstruction_loss = sum(reconstruction_loss_values)/num_batches
@@ -71,11 +73,11 @@ def train(dl, model, reconstruction_loss, beta_fn, optimizer, epochs):
     print("Done!")
     return history
 
-def plot_loss_values(history):
+def plot_loss_values(history, figname=None):
     #Batch numbers when epochs ended
     epoch_ends = [history["batches_per_epoch"]*e for e in range(history["epochs"])]
 
-    fig, axs = plt.subplots(1, 3, figsize=(10, 5))
+    fig, axs = plt.subplots(3, 1, figsize=(10, 15))
     for (i, loss) in enumerate(["reconstruction_loss", "kl_loss", "vae_loss"]):
         axs[i].set_title(loss.replace('_', ' ').capitalize())
         axs[i].plot(history[loss])
@@ -83,4 +85,32 @@ def plot_loss_values(history):
         sec = axs[i].secondary_xaxis(-0.15)
         sec.set_xticks(epoch_ends, labels=range(history["epochs"]))
         sec.set_xlabel("Epoch")
-    plt.show()
+    fig.tight_layout()
+    if figname is None:
+        plt.show()
+    else:
+        plt.savefig(figname)
+
+def get_default_dataloader():
+    transforms = [
+        tv.transforms.Grayscale(),
+        tv.transforms.ToTensor(),
+        v2.RandomHorizontalFlip(0.5),
+        v2.ColorJitter(0.2, 0.2, 0.2, 0.2),
+        RandomCropResizeTransform(38, 64, 0.5)
+    ]
+    ds1 = tv.datasets.ImageFolder(
+        root="./../data/cats1",
+        transform=tv.transforms.Compose(transforms)
+    )
+    ds2 = tv.datasets.ImageFolder(
+        root="./../data/cats2/data",
+        transform=tv.transforms.Compose(transforms)
+    )
+    ds = torch.utils.data.ConcatDataset([ds1, ds2])
+    dl = torch.utils.data.DataLoader(
+        ds,
+        batch_size=32,
+        shuffle=True
+    )
+    return dl
