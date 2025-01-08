@@ -91,7 +91,7 @@ def plot_loss_values(history, figname=None):
     else:
         plt.savefig(figname)
 
-def get_default_dataloader():
+def get_default_dataset():
     transforms = [
         tv.transforms.Grayscale(),
         tv.transforms.ToTensor(),
@@ -108,6 +108,10 @@ def get_default_dataloader():
         transform=tv.transforms.Compose(transforms)
     )
     ds = torch.utils.data.ConcatDataset([ds1, ds2])
+    return ds
+
+def get_default_dataloader():
+    ds = get_default_dataset()
     dl = torch.utils.data.DataLoader(
         ds,
         batch_size=32,

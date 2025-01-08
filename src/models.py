@@ -71,9 +71,9 @@ class VariationalAutoencoder(torch.nn.Module):
         logvar = self.logvar_linear(x)
         return mean, logvar
 
-    def sample(self, mean, logvar):
-        eps = torch.normal(torch.zeros(mean.shape), torch.ones(logvar.shape))
-        return mean + torch.exp(logvar/2) * eps
+    def sample(self, mean, logvar, eps=1):
+        standard_normal = torch.normal(torch.zeros(mean.shape), torch.ones(logvar.shape))
+        return mean + torch.exp(logvar/2) * standard_normal * eps
 
     def decode(self, x):
         x = nn.ReLU()(self.decoder_linear(x))
