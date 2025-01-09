@@ -12,11 +12,13 @@ class VariationalAutoencoder(torch.nn.Module):
                  decoder_conv_t_channels,
                  decoder_conv_t_kernel_size,
                  decoder_conv_t_stride,
-                 decoder_conv_t_padding):
+                 decoder_conv_t_padding,
+                 eps=0.001):
         assert len(encoder_conv_channels) == len(encoder_conv_kernel_size) == len(encoder_conv_stride) == len(encoder_conv_padding)
         assert len(decoder_conv_t_channels) == len(decoder_conv_t_kernel_size) == len(decoder_conv_t_stride) == len(decoder_conv_t_padding)
         super().__init__()
         self.latent_space_dim = latent_space_dim
+        self.eps = eps
 
         #Encoder
         self.encoder = nn.Sequential()
@@ -71,7 +73,7 @@ class VariationalAutoencoder(torch.nn.Module):
         logvar = self.logvar_linear(x)
         return mean, logvar
 
-    def sample(self, mean, logvar, eps=1):
+    def sample(self, mean, logvar, eps):
         standard_normal = torch.normal(torch.zeros(mean.shape), torch.ones(logvar.shape))
         return mean + torch.exp(logvar/2) * standard_normal * eps
 
@@ -83,6 +85,6 @@ class VariationalAutoencoder(torch.nn.Module):
 
     def forward(self, x):
         mean, logvar = self.encode(x)
-        sampled = self.sample(mean, logvar)
+        sampled = self.sample(mean, logvar, self.eps)
         output = self.decode(sampled)
         return output, mean, logvar
